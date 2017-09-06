@@ -1,0 +1,19 @@
+---
+title: "A Bayesian Analysis of My D&D Dice"
+author: "Everett Robinson"
+date: "September 6, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+# Introduction
+
+My girlfriend and I have been attending a weekly Dungeons & Dragons night at a local board game cafe, which means that we have been thoroughly immersed in the superstition surrounding the dice. We have heard stories of unlikely strings of bad rolls that ultimately lead to the frustrated fellow adventurer performing the [salt water test](https://www.youtube.com/watch?v=VI3N4Qg-JZM) to see if the dice are balanced poorly. This test is really cool, and it certainly explains the physical mechanism for why a die will come up on some faces more than others, but it doesn't tell you anything about the probabilities of rolling each face. Even with an off balance die, say a d20 that's weighted in favour of rolling a twenty, we shouldn't expect every normal roll on a hard surface to come up twenty. How frequently it comes up will presumably depend on the severity of the balance issue. As an aspiring data scientist I couldn't help but think that a much better approach would be a Bayesian analysis for estimating the probability of rolling each face. 
+
+Normally I don't care too much about such superstitions and just take the rolls as they come. I probably never would have implemented this Bayesian analysis, if not for the fact that I have developed a bit of a reputation for rolling high damage numbers on my d10 at our table. The curiosity has now gotten the better of me and I want better estimates of the true probabilities for my dice.
+
