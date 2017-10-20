@@ -105,17 +105,20 @@ server <- function(input, output) {
                       d6 = 6,
                       d4 = 4)
       dice_data <- as.numeric(unlist(strsplit(input$dice_data,"\n")))
+      true_faces <- ifelse(faces == 100, 10, faces)
       
-      dice_result <- bayesian_dice_analysis(dice_data, faces, beta_prior_a = 100/faces, beta_prior_b = 100 - 100/faces)
+      dice_result <- bayesian_dice_analysis(dice_data, faces, beta_prior_a = 100/true_faces, beta_prior_b = 100 - 100/true_faces)
       
       ggplot(dice_result, aes(x = face, y = posterior_mean)) + 
         geom_point() +
         geom_errorbar(aes(ymin = ci_95_lower, ymax = ci_95_upper), colour = "black", width = 0.1) +
-        geom_hline(aes(yintercept = 1/faces, color = "red")) +
-        scale_x_continuous(breaks = round(seq(from = 0, to = faces, by = ifelse(faces == 20, 2, 1)))) +
+        geom_hline(aes(yintercept = 1/true_faces, color = "red")) +
+        scale_x_continuous(breaks = round(seq(from = 0, to = faces, by = ifelse(faces == 20, 2, ifelse(faces == 100, 10, 1))))) +
         theme(legend.position = "none") +
         coord_flip() +
-        ggtitle("Posterior Probablities for Each Face of Your Dice")
+        ggtitle("Posterior Probablities for Each Face of Your Dice") +
+        labs(x = "Face of the Dice",
+             y = "Posterior Probability Distribution")
   })
   # Create table of the dice face probabilities
   output$dice_table <- renderTable({
@@ -129,11 +132,13 @@ server <- function(input, output) {
                     d6 = 6,
                     d4 = 4)
     dice_data <- as.numeric(unlist(strsplit(input$dice_data,"\n")))
+    true_faces <- ifelse(faces == 100, 10, faces) # The d100 doesn't actually have 100 faces
     
-    dice_result <- bayesian_dice_analysis(dice_data, faces, beta_prior_a = 100/faces, beta_prior_b = 100 - 100/faces)
+    dice_result <- bayesian_dice_analysis(dice_data, faces, beta_prior_a = 100/true_faces, beta_prior_b = 100 - 100/true_faces)
     dice_result <- dice_result %>% 
       select(-beta_post_a, - beta_post_b, -posterior_median, -posterior_mode)
     dice_result$face <- as.integer(dice_result$face) 
+    names(dice_result) <- c("Face", "Successes", "Failures", "Posterior Mean", "Lower 95% C.I.", "Upper 95% C.I.")
     dice_result
   }, digits = 4)
 }

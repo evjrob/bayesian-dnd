@@ -1,0 +1,12 @@
+name: bayesian-dnd
+title: bayesian-dnd
+username:
+account: evjrob
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 227355
+bundleId: 1037004
+url: https://evjrob.shinyapps.io/bayesian-dnd/
+when: 1508524317.97287
+asMultiple: FALSE
+asStatic: FALSE
