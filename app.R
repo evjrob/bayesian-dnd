@@ -90,7 +90,7 @@ server <- function(input, output) {
     description_text_1 <- "This Shiny app allows you to determine better estimates of the true probabilities for rolling each face of a polyhedral dice using bayesian statistics. Roughly speaking, the dice should not be considered fair when one or more of the 95% credible interval lines fails to contain the vertical red line in it's range. To learn more about how this app works, please visit this "
     blog_link <-  a("blog post.", href = "https://everettsprojects.com")
     description_text_2 <- " The code for this shiny app can be found on "
-    github_link <- a("GitHub.", href = "https://github.com/evjrob")
+    github_link <- a("GitHub.", href = "https://github.com/evjrob/bayesian-dnd")
     tagList(p(), description_text_1, blog_link, description_text_2, github_link, p())})
   
   # Create plot of the dice face probabilities
