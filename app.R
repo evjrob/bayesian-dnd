@@ -87,41 +87,15 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   output$description <- renderUI({
-    description_text_1 <- "This Shiny app allows you to determine better estimates of the true probabilities for rolling each face of a polyhedral dice using bayesian statistics. Roughly speaking, the dice should not be considered fair when one or more of the 95% credible interval lines fails to contain the vertical red line in it's range. To learn more about how this app works, please visit this "
+    description_text_1 <- "This Shiny app allows you to determine better estimates of the true probabilities for rolling each face of a polyhedral dice using bayesian statistics. Roughly speaking, the dice should not be considered fair when one or more of the 95% credible interval lines fail to contain the vertical red line in their range. To learn more about how this app works, please visit this "
     blog_link <-  a("blog post.", href = "https://everettsprojects.com/2017/10/20/bayesian-dnd.html")
     description_text_2 <- " The code for this shiny app can be found on "
     github_link <- a("GitHub.", href = "https://github.com/evjrob/bayesian-dnd")
     tagList(p(), description_text_1, blog_link, description_text_2, github_link, p())})
   
-  # Create plot of the dice face probabilities
-  output$dice_plot <- renderPlot({
-      dice_selection <- input$dice_selection
-      faces <- switch(dice_selection,
-                      d20 = 20,
-                      d12 = 12,
-                      d10 = 10,
-                      d100 = 100,
-                      d8 = 8,
-                      d6 = 6,
-                      d4 = 4)
-      dice_data <- as.numeric(unlist(strsplit(input$dice_data,"\n")))
-      true_faces <- ifelse(faces == 100, 10, faces)
-      
-      dice_result <- bayesian_dice_analysis(dice_data, faces, beta_prior_a = 100/true_faces, beta_prior_b = 100 - 100/true_faces)
-      
-      ggplot(dice_result, aes(x = face, y = posterior_mean)) + 
-        geom_point() +
-        geom_errorbar(aes(ymin = ci_95_lower, ymax = ci_95_upper), colour = "black", width = 0.1) +
-        geom_hline(aes(yintercept = 1/true_faces, color = "red")) +
-        scale_x_continuous(breaks = round(seq(from = 0, to = faces, by = ifelse(faces == 20, 2, ifelse(faces == 100, 10, 1))))) +
-        theme(legend.position = "none") +
-        coord_flip() +
-        ggtitle("Posterior Probablities for Each Face of Your Dice") +
-        labs(x = "Face of the Dice",
-             y = "Posterior Probability Distribution")
-  })
-  # Create table of the dice face probabilities
-  output$dice_table <- renderTable({
+  #Calculate the dice results once and validate the inputs using reactive()
+  dice_result <- reactive({
+    dice_data <- as.numeric(unlist(strsplit(input$dice_data,"\n")))
     dice_selection <- input$dice_selection
     faces <- switch(dice_selection,
                     d20 = 20,
@@ -131,15 +105,55 @@ server <- function(input, output) {
                     d8 = 8,
                     d6 = 6,
                     d4 = 4)
-    dice_data <- as.numeric(unlist(strsplit(input$dice_data,"\n")))
-    true_faces <- ifelse(faces == 100, 10, faces) # The d100 doesn't actually have 100 faces
     
+    true_faces <- ifelse(faces == 100, 10, faces)
+    
+    # Validate the inputs so the user doesn't see an unhelpful error
+    validate(
+      # Check that no rolls are non-numeric
+      need(sum(is.na(dice_data)) == 0, "Please ensure all rolls are numeric values."),
+      need(((sum(dice_data > faces, na.rm = TRUE) + sum(dice_data < 0, na.rm = TRUE)) == 0), 
+           "Please ensure all rolls fall in the range of possible values.")
+    )
+  
     dice_result <- bayesian_dice_analysis(dice_data, faces, beta_prior_a = 100/true_faces, beta_prior_b = 100 - 100/true_faces)
+    
+    # Clean up the table to be more presentable
     dice_result <- dice_result %>% 
       select(-beta_post_a, - beta_post_b, -posterior_median, -posterior_mode)
     dice_result$face <- as.integer(dice_result$face) 
     names(dice_result) <- c("Face", "Successes", "Failures", "Posterior Mean", "Lower 95% C.I.", "Upper 95% C.I.")
+    
     dice_result
+  })
+  
+  # Create plot of the probabilities for each face
+  output$dice_plot <- renderPlot({
+    dice_selection <- input$dice_selection
+    faces <- switch(dice_selection,
+                    d20 = 20,
+                    d12 = 12,
+                    d10 = 10,
+                    d100 = 100,
+                    d8 = 8,
+                    d6 = 6,
+                    d4 = 4)
+    true_faces <- ifelse(faces == 100, 10, faces)
+    
+    ggplot(dice_result(), aes(x = Face, y = `Posterior Mean`)) + 
+      geom_point() +
+      geom_errorbar(aes(ymin = `Lower 95% C.I.`, ymax = `Upper 95% C.I.`), colour = "black", width = 0.1) +
+      geom_hline(aes(yintercept = 1/true_faces, color = "red")) +
+      scale_x_continuous(breaks = round(seq(from = 0, to = faces, by = ifelse(faces == 20, 2, ifelse(faces == 100, 10, 1))))) +
+      theme(legend.position = "none") +
+      coord_flip() +
+      ggtitle("Posterior Probablities for Each Face of Your Dice") +
+      labs(x = "Face of the Dice",
+           y = "Posterior Probability Distribution")
+  })
+  # Create table of the dice face probabilities
+  output$dice_table <- renderTable({
+    dice_result()
   }, digits = 4)
 }
 
