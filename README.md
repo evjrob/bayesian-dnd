@@ -1,5 +1,5 @@
 # bayesian-dnd
-An R shiny app that helps you assess how fair your polyhedral dice are.
+An R + shiny app that helps you assess the fairness of your polyhedral dice.
 
 See it in action at:
 https://evjrob.shinyapps.io/bayesian-dnd/
